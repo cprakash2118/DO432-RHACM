@@ -1,0 +1,58 @@
+https://github.com/cprakash2118/DO432-RHACM
+
+Point-01-#
+Product - Red Hat OpenShift [Red Hat OpenShift Anywhere]
+
+1-# Cloud services editions
+ - Red Hat OpenShift Service on AWS                  [Platform=AWS;POC=Amazon]
+ - Microsoft Azure Red Hat OpenShift                 [Platform=Azure;POC=MS Azure]
+ - Red Hat OpenShift Dedicated                       [Platform=AWS/GCP;POC=RedHat]
+ - Red Hat OpenShift on IBM Cloud                    [Platform=IBM;POC=IBM]
+
+2-# Self-managed editions
+ - Red Hat OpenShift Kubernetes Engine               [Basic=RHOKE]
+ - Red Hat OpenShift Container Platform              [Standard=RHOCP]
+ - Red Hat OpenShift Platform Plus                   [Add-On-RHOPP]
+ - Red Hat OpenShift Virtualization Engine           [Add-ON:- RHOV - KubeVirt based cloud-native virtilization]
+ 
+3-# Services & add-ons
+ - Red Hat OpenShift AI
+ - Red Hat OpenShift Lightspeed
+ - Red Hat OpenShift Virtualization  [KubeVirt]
+ - Red Hat Quay
+ - Red Hat Advanced Cluster Management for Kubernetes [RHACM]
+ - Red Hat Advanced Cluster Security for Kubernetes   [RHACS]
+ - Red Hat Advanced Developer Suite
+ - Red Hat OpenShift Consulting
+ 
+ 
+Point-02-# 
+ 
+Example:-
+API URL = https://api.clusterName.baseDoamin:6443 
+Web URL = https://appName-namespaceName.apps.clusterName.baseDoamin
+
+1st Cluster:-
+-RHOCP [3 master; N worker]  -> 1st Cluster.     [HUB Cluster - RHACM - Local Cluster]
+ BaseDomain=example.com      -> citi.com 
+ ClusterName=ocp4            -> cluster-apac
+ user=admin/redhatocp 
+ appName=console 
+ namespaceName=openshift-console
+ API URL = https://api.ocp4.example.com:6443 
+ Web URL = https://console-openshift-console.apps.ocp4.example.com 
+ Cluster Name IP Range - 192.168.50.0/24 
+
+
+2nd Cluster:-
+-RHOCP [3 master; N worker]  -> 2nd Cluster.
+ BaseDomain=example.com      -> citi.com 
+ ClusterName=ocp4-mng        -> cluster-na
+ user=admin/redhatocp 
+ appName=console 
+ namespaceName=openshift-console
+ API URL = https://api.ocp4-mng.example.com:6443 
+ Web URL = https://console-openshift-console.apps.ocp4-mng.example.com 
+ Cluster Name IP Range - 192.168.51.0/24
+ 
+
