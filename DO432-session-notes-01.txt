@@ -1,0 +1,228 @@
+#### Point-01-#
+Product - Red Hat OpenShift [Red Hat OpenShift Anywhere]
+- Managed Service 
+- Self Service 
+- RHOCP 
+- Add-On Service (RHACM)
+- RHACM - Red Hat Advance Cluster Management.
+
+
+#### Point-02-# 
+Example:-
+API URL = https://api.clusterName.baseDoamin:6443 
+Web URL = https://appName-namespaceName.apps.clusterName.baseDoamin
+
+1st Cluster:-
+-RHOCP [3 master; N worker]  -> 1st Cluster.     [HUB Cluster - Deployed RHACM - Local Cluster]
+ BaseDomain=example.com      -> citi.com 
+ ClusterName=ocp4            -> cluster-apac
+ 
+ user=admin/redhatocp 
+ appName=console 
+ namespaceName=openshift-console
+ 
+ API URL = https://api.ocp4.example.com:6443 
+ Web URL = https://console-openshift-console.apps.ocp4.example.com 
+ Cluster IP Range - 192.168.50.0/24 
+
+
+2nd Cluster:-
+-RHOCP [3 master; N worker]  -> 2nd Cluster.
+ BaseDomain=example.com      -> citi.com 
+ ClusterName=ocp4-mng        -> cluster-na
+ user=admin/redhatocp 
+ appName=console 
+ namespaceName=openshift-console
+ API URL = https://api.ocp4-mng.example.com:6443 
+ Web URL = https://console-openshift-console.apps.ocp4-mng.example.com 
+ Cluster IP Range - 192.168.51.0/24
+ 
+---------------------------------------------------------------------------------------------
+Point-03-# 
+- Architecture of Red Hat Advanced Cluster Management for Kubernetes.
+- Installing Red Hat Advanced Cluster Management for Kubernetes.
+
+Classroom Environment (DO432v213 - EX432 - V418,V213).
+Cluster-01 - "ocp4"
+Cluster-02 - "ocp4-mng"
+BaseDomain - "example.com" 
+
+API URL:-
+Cluster-01 - https://api.ocp4.example.com:6443  - Local/HUB cluster 
+Cluster-02 - https://api.ocp4-mng.example.com:6443 - Manage cluster 
+
+$ oc login -u admin -p redhatocp https://api.ocp4.example.com:6443       [History line 3rd]
+$ oc login -u admin -p redhatocp https://api.ocp4-mng.example.com:6443   [History line 4th]
+$ history 
+!3 -> cluster-01 (as cluster-admin)
+!4 -> cluster-02 (as cluster-admin)
+
+FYI- Unable to login to both cluster same time (w.r.t LAB and exam).
+
+Web Console:-
+Cluster-01 - https://console-openshift-console.apps.ocp4.example.com
+Cluster-02 - https://console-openshift-console.apps.ocp4-mng.example.com 
+
+FYI- Both cluster same time can be access (WIth new version of RHACM not even required).
+Note: Switch option 
+
+
+
+
+Point-04-# Why RHACM exists (What problem it solves)?
+1- One Console for many clusters.
+   - Instead of logging in to 10/50/200 clsters seperatly, RHACM give single control plan view.
+2- Works across hybrid environments:-
+   - Manage cluster across:-
+     - Multiple DCs (On-Prem)
+	 - Private Cloud 
+	 - Public Cloud (ROSA/ARO/Dedicated/IBM)
+	 - Edge sites 
+3- End-to-end "Day-02" operations:-
+   - Not just cluster creation - also:-
+     - Upgrade 
+	 - Compliance enforcement 
+	 - application placement acorss cluster 
+	 - Monitoring health of cluster + workload 
+	 - Logging solution.
+
+4- Cloud-native approach:-
+     - RHACM runs as Kubernetes components (Operator/controllers) are interats with cluster via k8s API.
+
+
+Point-05-# The Core architecure (HUB cluster <-> Managed cluster):-
+A-) HUB cluster/ Control center / Local Cluster
+
+ 1- API:- 
+    - RHACM expose API for automation/integration (Script, CI/CD, external system).
+
+ 2- Console (Web Console):-
+    - Main UI, with key built-ins:-
+	  - Search (Find resources across all clusters)
+	  - Topology (Relationship view:- Example [app -> Deployment -> pod -> service -> route ]
+      - Observability:- Metrics/alerts dashboard when enabled.
+
+ 3- CLI:-
+     - Admins can drive opeartions (with automation) using all command line tooling.
+       oc,virtctl,policyGenerator, helm etc 
+
+ 4- MultiClusterHub resource:-
+    - The hub cluster uses a key custom resource called "MultiClusterHub" to install, upgrade and 
+      manage RHACM components.
+    - RHACM hub components runs in the specific namespace (open-cluster-management) 
+
+ 5- Async work model:-
+    - Hub doesn't "ssh  into cluster".
+    - It send desired state/ Work request and receives status back.
+    - This scales better when you manage many cluster.
+
+  Local cluster concpets.
+  - Local cluster is the OpenShift cluster where RHACM hub is installed (Via Operator/etc).
+  - RHACM treats it also as managed cluster. 
+  
+  
+B) Managed Clusters (Workers/Targets):-
+   A managed cluster is any OpenShift/Kubernetes cluster that is registered to the HUB/LOcal cluster.
+   
+   On each managed cluster RHACM installs:-
+    - Klusterlet (agent):-
+	  1- This is the key agent.
+	  2- It controls the secure connection between the managed cluster and HUB/LOcal cluster.
+	  3- It receives "work" from HUB and applies it locally (Policy/app/placement related tasks).
+	  
+	- Search Components:-
+	  - COllects cluster resources metadata so the HUB can do global search.
+	
+	- Application Components:-
+	   - Enable application placement and multi cluster app lifecycle action.
+	
+	- Policy Components:-
+	   - Enables governance lifecycle (compliance checking + enforcement)
+	
+	- Observability (Optional one):-
+	   Sends health/metrics to the HUB's Observability stack when enabled.
+
+	   
+Point-06-# 4 capability pillars of RHACM.
+ 1- Cluster lifecycle (Create/import/manage/upgrade/delete):-
+   1.1- What it means?
+      - Full lifecycle opeartions for clusters across different infrastructures.
+   
+   1.2- Who provides it?
+      - MultiCluster engine for Kubernetes operator (Installed automatically with RHACM).
+
+   1.3- What you do from the HUB console (Local/All cluster):-
+     - Aggregate health of all cluster.
+     - Drill into health metrics per cluster.
+     - Upgrade cluster individually or in bulk.
+     - Delete cluster (the were created by HUB/LOCAL cluster).
+     - Hibernate/Resume/Detach cluster.
+
+   Example:- 
+    - You have 12 OpenShift clusters:-
+       - 2 in AWS, 2 in Azure, 4 on-prem, 4 edge.
+    - From RHACM hub cluster (You can):
+       - detect 3 clusters are behind on minor version.
+	   - Schedule bulk upgrades in a controlled window.
+	   - Temp detach a cluster during some maintenance work (Might a faulty h/w replacement).
+	   
+
+  2- Application lifecycle (deploy/maintain apps across clusters):-
+   2.1- What is mean ?
+        - Deploy the same app across multiple cluster with consistent configuration.
+		- Manage upgrades/rollouts consistently.
+
+   2.2- HOw RHACM does this?
+        - Uses kubernetes spec + placement rules (decide where an app should go/deployed).
+		- Integrates strongly with OpenShift Gitops operator (Argo CD).
+		- Can integrate automation via "Ansible Automation Platfrom jobs" for app-related tasks.
+		
+    Example (Application lifecycle):-
+	 - You can a "Customer Portal" app:
+	    - Dev cluster (Bangalore)
+		- Staging cluster (Mumbai)
+		- Prod cluster (2 clusters: active-active)
+	
+	 - GitOps pushes the app:-
+	   - Dev get every commit 
+	   - Staging get tagged releases 
+	   - Prod gets only approved releases.
+	   
+	 - RHACM ensure placment:-
+	   - Prod app must run only on clusters lables (env=prod) and resion=india
+	   
+  3- Governance (Policy + compliance at scale):-
+     1- What it means?
+      - Define policy that:-
+        - Inform you when somethinf is wrong (AUdit)
+        - Or enforce the desired state (Prevent drift)
+     2. Policy Framework
+        -  RHACM provides a policy framework to:-
+           - Create policies centrally.
+           - Apply to selected cluster/groups 
+           - Track compliance status over time.
+     3. Dynamic policy templates:-
+        - You can standardize policies and reuse them acorss many cluster/groups.
+
+
+ 4- Observability  
+ 
+Point-07-# MultiCluster Global HUb (When one HUB is not enough):-
+   - Problems it solves:-
+        - Large env, a single HUB may not be ideal to manage everything.
+   - Global HUB is the solution.
+        - It let you import one ore more HUB cluster and manage then from single place.
+   - Disign part:-
+       - You split cluster into groups:-
+	     - HUB-01: India region 
+		 - HUB-02: Middle East region
+		 - HUB-03: Europe region
+		 - HUB-04: NA resion
+	   - Global HUB provide consolidated view.
+	   
+	   Example:-
+	     Golabl-HUB-01:-
+		 - HUB-01: India region 
+	     - HUB-02: Middle East region
+	     - HUB-03: Europe region
+         - HUB-04: NA resion
