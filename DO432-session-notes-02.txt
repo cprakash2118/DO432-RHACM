@@ -1,0 +1,112 @@
+#Unit-2-Part-01-#
+Managing Clusters by Using Red Hat Advanced Cluster Management for Kubernetes:-
+- Cluster Lifecycle Management by Using the RHACM Web Console 
+- Navigating the RHACM Web Console 
+- Configuring Access Control for Multicluster Management [RBAC]
+- Troubleshooting Common Import Issues for Managed Clusters.
+
+Point-01-) Cluster Lifecycle Management by Using the RHACM Web Console
+- What is "Cluster Lifecycle Management" means in RHACM.
+  - RHACM deployed (via Operator HUB) on local/selected cluster.
+  - Deployed RHACM provide one/single console to manage the full life of Kubernetes/OpenShift cluster.
+  FYI- OpenShift cluster means [Managed-ROSA/ARO/Dedicated/IBM-Pack ; Self-Edition] 
+     - Other certified k8s distributions (Approved by CNCF)
+	   https://www.cncf.io/training/certification/software-conformance/
+	   
+  1. Create (Provision) a new cluster (Public-Private Cloud; Virtulization-layer; BareMetal level)
+  2. Import an already-running cluster into RHACM so that RHACM can manage it.
+  3. Manage day-2 opeartions Like:-
+     - AUthentication & Authorization [Multiple IdPs=htpass/LDAP/LDAP-Sync/OpenIDConnect/Client-Certificate]
+	 - Backup, restore and migration of application via OADP.
+	 - MachineConfig [MCO,MCS,MCC,MCD,MC,MCP,Special Operator for tuned/Kernel - KMM]
+	 - Argo DC deployemnt 
+	 - Monitoring Stack deployment 
+	 - Logging Solution using Vector/Grafana Logi as Log aggrigation tool).
+	 - Minor/Major update (OCPv4.18.24 -> OCPv4.18.56 ; OCPv4.19 -> OCPv4.19).
+	 - ResourceQuota/LimitRange - RBAC.
+	 - ETC.
+  4. Detach/ Remove a cluster cleanly when you no longer want RHACM control on that cluster.
+  
+Point-02-)
+  Roles of RHACM's components:-
+  A) RHACM HUB cluster 
+     - This is the OpenShift cluster where RHACM is installed.
+     - As control plane for multi-cluster management.
+
+  B) Multicluster Engine Operator (MCE):-
+     - Provides the "cluster lifecycle" framework that RHACM uses.
+     - RHACM UI triggers actions, MCE orchestrates.
+
+  c) Hive Operator (Provisionining engine).
+     - Hive is the provisioning controller for most supported provides.
+     - When you create cluster in RHACM, Hive create the real cloud resources and install OpenShift.
+
+  D) Assisted installer (For some on-prem flows):-
+     - FOr on-pre, provisioning patterns, the flow differs from pure cloud.
+     - RHACM uses platform integrations + assisted install capabilities instead of onlu "Hive".
+
+
+Point-03-) Cluster types supported (k8s distributions):-
+  - RHACM supports provisioning/importing clusters across providers certified through CNCF:-
+    - AWS 
+    - AWS GovCloud 
+    - MIcroSoft Azure 
+    - Google Clooud Platfrom 
+    - VMware vSphare 
+    - Red Hat OpenStack Platfrom.
+    - On-Premise 
+
+Point-04-) Infrastructure menu in RHACM console:-
+   - In RHACM UI, Infrastructure is where cluster lifecycle is centered.
+     1- Cluster:-   
+	    Create - new cluster (Provision)
+	    Import - Existing cluster (Attach)
+	    View   - Health,  distributions details and etc.
+	  
+	 2- Automation:-
+	    Create Ansible Template 
+		Attach prehook and posthooks jobs.
+		 FYI- Example:- run a "pre-create validatio" job, or "Post-create hardening" job 
+	
+	 3- Host Inventory:-
+	    Discover physical/virtual hosts for on-prem installs.
+		Helps when you want RHACM-driven on-prem cluster rollout (host-based workflows).
+		
+	 4- Virtual Machines:-
+	     Central VM view/ Management across cluster (w.r.t OpenShift Virtulization is in play).
+
+Point-05-) Creating a Cluster - What RHACM actually create behind the scenes:-
+ 
+ 
+  RHOSPv16/17 [Controller,Compute,Storage,ComputeHCI]
+  Controller [3 nodes]
+  Compute    [40 nodes]
+  Storage    [3 nodes cluster - CEP]
+  
+  RHOSPv18 -> [Controller running on RHOCP]  -> Private Cloud. CL170
+  Controller [3 nodes] - Running now on OCP cluster.
+  Compute    [40 nodes]
+  Storage    [3 nodes cluster - CEP]
+  
+  
+  
+  - When you click "Create cluster" in the console (RHACM (via MCE) relies on HIVE.
+  
+  - *** RHACM create a "ClusterDeployment" CR (Custom Resource).
+  That "ClusterDeployment":
+  - Describes the desired cluster (name, BaseDomain, provider, region, credentials).
+  - POints to an OpenShift release via an image reference [Select RHOCP version image]
+  - point to install config/ssh key/ pull secret reference
+  
+  Hive watches the ClusterDeployment and perform the install
+  
+  - Why "ClusterImageSet" exist?
+    - ClusterImageSet = "Approved OpenShift installer image catalog"
+	- Immutable reference 
+	- Decopling installer from cluster definitions.
+	
+
+What  Search architecture?
+
+	
+  
