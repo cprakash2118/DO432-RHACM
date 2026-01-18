@@ -1,0 +1,196 @@
+# Quick Recap (5 mins):-
+Unit-1-# 
+- RHACM (Add-on Service on RHOCP).
+- INstalled RHACP on one of the cluster (ocp4)
+- Import the other cluster (ocp4-mng).
+  FYI- As per DO432 - New cluster deployment.
+- After RHACM installation on 1st cluster (ocp4), import/detach the other cluster (ocp4-mng).
+- ClusterSet (Logical grouping of certified k8s cluster - List as per CNCF).
+- RBAC w.r.t Multi cluster part (RHACM level).
+
+Unit-3-#
+- Deploying and Managing Policies for Multiple Clusters with RHACM.
+
+Point-01-# 
+- What does "Policy" means in RHACM?
+
+- Imagine you are IT Head of larger ORg.
+- Now what you have:-
+  1 head office 
+  10 Branch offices.
+  
+- Each Branch office has:-
+  - System.
+  - network device 
+  - servers 
+  - Employees.
+  
+Now you make some company rules:-
+ -1 Everyone should wear an ID card.
+ -2 Office must be close (timeing )
+ -3 Antivirus must be installed on all systems (Some team who review - Security Team or XYZ team).
+ -4 Report to your manager
+
+These rules are:-
+ - Written once 
+ - Applied everywhere 
+ - Check regularly 
+ - If any violations then it should be reported 
+ - Or some violations are auto fixed.
+ - etc 
+ 
+Note: - These company rules are called POLICIES 
+K8s/OpenShift level:-
+  Story world                      RHACM World 
+- Head Office                     HUb cluster (Local cluster) - OCP cluster - ocp4 
+- Branch Office                   All managed cluster (ocp4, ocp4-mng)
+- Employees                       Kubernetes/OCP resources (POD,Deployment,StatefulSet,CM,secret etc)
+- Company Rules                   RHACM policies 
+- Security Team                   Policy Controller.
+
+What is a Policy in RHACM ?
+- In RHACM, a policy is a RULE that defines "what configuration", "security", or "operational state" MUST or 
+  MUST NOT exist on a cluster.
+
+*** 1- What exactly does a Policy do?
+1- Policy define a RULE (WHAT)?
+   Policy always answers:
+   "What should be true on a cluster?"
+ 
+ Example:- 
+ - Namespace prod must exist 
+ - Cretificates must not expire in next 90 days.
+ - Monitoring operator must be installed.
+ - POD must not run as root.
+
+2- Policy Checks the rule.
+  RHACM sends the policy to target cluster and check:-
+  - Is the rule followed ?
+  - Yes or No?
+
+3- Policy Reports compliance.
+  Result is reported as:-
+  - Compliant 
+  - NonCompliant.
+  FYI- Shown centrally on the HUB cluster dashboad.
+  
+4- POlicy can AUTO-FIX (Optional):-
+  Depending on configuration:
+  - inform -> ONly report 
+  - enforce -> automatically fix.
+  
+
+
+#########
+Statement - SO policy is just like a Condition check ?
+- Yes - Condition check on Enterprise-grade and continuous.
+
+Think of policy as- A continuously running rule engine for cluster.
+FYI- It doesn't run once - it keeps checking 
+
+
+**********************************************************************************
+What policy contains ?
+1- Rule defination
+2- Compliance behavior (inform/enforce).
+3- Severity (low, medium, critical)
+4- Templates (what controller will evaluate it).
+
+Example:- Namespace Policy.
+ 
+ Business rule:-
+ "ALL clusters must have a namespace called 'prod'"
+ 
+ POlicy meaning:-
+ Check if namespace "prod" exist?
+ If not -> NonCompliant.
+ 
+
+ RHACM policy says:-
+  kubernetes object "namespace"
+  name "prod"
+  Compliance type - Must have 
+
+ Result:-
+   Situaltion                         Status 
+ Namespace exists                  Yes, Compliant 
+ Namespace missing                 No, NonCompliant
+ Enforce enabled                   namespace created 
+ 
+ 
+ FYI:-
+ - Policy - Kubernetes/OCP YAML file.
+ - Policy is Kubernetes Custom Resource (CR) defined by RHACM.
+ 
+ *****************  Just remember -> Policy = Rule  ******************************* 
+ 
+==================================================================
+Type Of Policies:- 
+RHACM supports multiple kinds of policies:-
+1 Configuration policy:-
+  Example:- Checks Kubernetes resources.
+   - namespace 
+   - deployment 
+   - RBAC 
+   - Labels 
+   
+   Namespace must exist.
+
+2- Certificate POlicy:-
+ Check certificates:-
+  - Expiry 
+
+  Example:- Certificate should not expire in next 300 hours 
+  
+3- Operator Policy 
+   Check operators:-
+    - installed or not 
+	- Correct version/channel 
+	
+	Example:- RHOV operator must be installed.
+
+
+*********************************
+PolicySet (Group of POlicies):-
+Collection of policies:-
+ Example:-
+  Namespace Policy + Pod Security Policy + Certificate Policy
+  
+Note: POlicy does not decide which cluster it applies to.
+
+Where the Policy deployed that is handled by:-
+- Placement 
+- PlacementBinding 
+
+----------------------
+Policy           -> What rule 
+Placement        -> Where 
+PlacementBinding -> COnnect 
+
+
+rule - Action (Policy)
+Role - Set of rule (PolicySet)
+Binding - Role assigment to user/group - RoleBinding/ClusterRoleBinding
+
+
+=================
+RHACM Governance:- 
+  POlicy 
+  PolicySet (Multiple policies)
+  placement - Where policy/PolicySet deployed (Cluster)
+  PlacementBinding - Connect 
+    
+RHACM Governance 
+ - Central place to define, apply, observe and enforce rules (Policy/PolicySet) across multiple cluster.
+ 
+RHACM policy:-
+ Rules
+
+PolicySet:-
+ Multiple policy.
+ 
+ 
+ Policy  (Define the rule)
+  -> Placement (Define target cluster)
+  -> PlacementBinding (Connect the two)
+ 
