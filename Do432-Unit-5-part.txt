@@ -1,0 +1,153 @@
+#DO432v213 (OCPv418):-
+
+ocp4.example.com     (HUB/Local)
+ocp4-mng.example.com (Managed cluster)
+FYI
+- COnsider HUB/Local cluster also as one of the managed cluster.
+- LDAP server [idm.ocp4.example.com] integrated with all cluster.
+
+
+1- Installation of RHACM (via Web Console).
+2- Import Other 2 two cluster (kubecrl not present/ replace with "oc").
+3- RBAC on ACM level (ClusterSet)
+   FYI- Local grouping of the cluster (One cluster part of one clusterSet only).
+   admin
+   view 
+   edit 
+4- Create Policy (it's just like a rule).
+   Deploying Policies by Using the RHACM Governance Dashboard
+5- Deploying and Configuring the Compliance Operator for Multiple Clusters by Using RHACM
+6- Use a policy to install the Gatekeeper operator by using the RHACM governance framework.
+7- Deploy Policies by Using Policy Generator.
+
+ODF = Ceph (RBD-Block; CephFS-File; RGW-Object Storage )+ NooBaa (MCG-Object Storage)
+
+ODF = NooBaa (MCG-Object Storage)
+
+ODF deployed - Hub Cluster (Only NooBaa Class - Object Storage)
+NFS we have for both clusters (utility.ocp4.example.com)
+ 
+Step-1 (Lab setup - Deployed ODF -  MCG)
+
+Step-2 namepsace (specific)
+FYI- ALl work w.r.t this namespace only.
+
+Step-3 Create secret (generic -> --from-leteral)
+   FYI- Get the default pulsecret, and use this info and create secret).
+
+
+##########################
+- GitOps:- (argoCD)
+- w.r.t Red Hat - GitOps [Red Hat GitOps operator]
+- namepsace:-
+   - openshift-gitops-operator 
+   - openshift-gitops [all applications deployed including one "argoCD instance]
+   - We can customize argoCD
+     - Route access (default route - passthough -> reencyption).
+	 - RBAC argoCD (Git/code repo).
+	 - Secure connection between argoCD instance and code repo.
+	 
+   - Using argoCD - application as resource [kind: Application/ApplicationSet].
+
+- How application delivery works in RHACM using GitOps. Consider three layers:-
+  1- What this is (GitOps via RHACM)?
+  2- Why we need it ?
+  3- Push Vs Pull Model 
+  
+###1- What this is (GitOps via RHACM)?  
+- Application Lifecycle Management in RHACM using GitOps.
+  OpenShift GitOps Operator:-
+  - This operator installs and manage ArgoCD on OpenShift.
+  - ArgoCD is the GitOps engine that:-
+    - Reads application defincation from code(git).
+	- Ensures cluster match what GIt says (Desired State).
+
+  FYI
+  - RHACM does NOT deploy application by ifself.
+  - It uses ArgoCD (via openshift-gitops-operator) to do application deplyment in GitOps way.
+  
+###2- Why we need it ?	
+Solution-GItOps + RHCAM (When bigger env like multi cluster):-
+- Git is the source of truth.
+- RHACM manages "where application deploying".
+- ArgoCD manages how application are deployed.
+- Policies ensure consustency and complaiance.
+
+###3- Push Vs Pull Model.
+
+Model-1st:- Push MOdel:-
+Concept:-
+  - ArgoCD runs only in HUB/Local cluster.
+  - Hub cluster pushes applications to managed clusters.
+
+Where GitOps operator installed?
+Ans- ONly in the Hub cluster.
+
+Question:- I have 10 managed cluster. Who deploys applications on them?
+Ans:- In Push model, think of the HUB/Local cluster as a central Control room.
+      1- One ArgoCD instance.
+	  2- It has credentials to all managed clusters.
+	  3- It pushes manifests to them (managed cluster).
+
+Technical flow:-
+1-# OpenShift GitOps Operator installed on HUB/Local cluster.
+2-# Operator deploy ArgoCD (namespace=openshift-gitops-operator)
+    FYI- ArgoCD instance deployed on openshift-gitops namepsace.
+3-# ArgoCD:-
+    - Reads applications manifests from Git.
+	- Use cluster credentials (Kubeconfig/Secret).
+	- Deploy applications directly into managed cluster.
+4-# RHACM controls:-
+    - Which cluster get what (via Placement).
+	
+*************
+When to use Push Model?
+- Small to medium env.
+- Centralized control preferred.
+- Simpler architecture.
+*************	
+
+Model-2nd:- Pull MOdel:- [Recommnended for Enterprise]
+Concepts:-
+  - ArgoCD runs in each managed cluster.
+  - Each cluster pulls its own configuration from git.
+  - HUB/Local cluster only coordinates.
+
+- So where you have installed gitOps operator?
+  - Hub cluster 
+  - All managed cluster.
+  
+Question-What if we have 100 clusters? Won't HUB/Local cluster be overloaded?
+Awsnwer- Exactly. That's why we use Pull Model.
+
+Hub/Local Cluster = Architect 
+Managed cluster   = Self Operating teams.
+
+Each Team:-
+ - Pull instructions from git.
+ - Applies then locally.
+ 
+
+Technical Flow:-
+ 1-# OpenShift GitOps Operator installed on:-
+   - Hub/Local cluster 
+   - Managed clusters (all).
+   
+ 2-# HUB ArgoCD:-
+    - Decides which app goes to which cluster.
+	
+ 3-# Managed cluster ArgoCD:-
+    - Pulls apps configs from git repo.
+	- Deploys locally.
+
+ 4-# RHACM:-
+    - Use placement rules to select cluster
+	- Maintains governance (Policies).
+
+**************
+When to use PULL model ?
+- Large-Scale env.
+- Better security (No central credentials).
+- High Scalability 
+- Highly preferred by Red Hat.
+
